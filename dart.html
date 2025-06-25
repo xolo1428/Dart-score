@@ -187,16 +187,17 @@
     });
 
     // 手機觸控支援
-    canvas.addEventListener("touchstart", function (event) {
-      if (event.touches.length > 0) {
+    canvas.addEventListener("touchend", function (event) {
+      if (event.changedTouches.length > 0) {
         const rect = canvas.getBoundingClientRect();
         const scaleX = canvas.width / rect.width;
         const scaleY = canvas.height / rect.height;
-        const x = (event.touches[0].clientX - rect.left) * scaleX;
-        const y = (event.touches[0].clientY - rect.top) * scaleY;
+        const x = (event.changedTouches[0].clientX - rect.left) * scaleX;
+        const y = (event.changedTouches[0].clientY - rect.top) * scaleY;
         handleDartHit(x, y);
       }
-    });
+      event.preventDefault(); // 防止雙擊放大等預設行為
+    }, { passive: false });
 
     function updateUI() {
       drawBoard();

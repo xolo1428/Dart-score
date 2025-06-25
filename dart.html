@@ -38,6 +38,7 @@
 
     let rounds = [];
     let hitMap = {}; // 統計每格命中次數
+    let touchLock = false;
 
     // 每輪三標
     function addRound() {
@@ -188,6 +189,10 @@
 
     // 手機觸控支援
     canvas.addEventListener("touchend", function (event) {
+      if (touchLock) return;
+      touchLock = true;
+      setTimeout(() => { touchLock = false; }, 250); // 0.25秒內不再接受新觸控
+
       if (event.changedTouches.length > 0) {
         const rect = canvas.getBoundingClientRect();
         const scaleX = canvas.width / rect.width;
@@ -196,7 +201,7 @@
         const y = (event.changedTouches[0].clientY - rect.top) * scaleY;
         handleDartHit(x, y);
       }
-      event.preventDefault(); // 防止雙擊放大等預設行為
+      event.preventDefault();
     }, { passive: false });
 
     function updateUI() {

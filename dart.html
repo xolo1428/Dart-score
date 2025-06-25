@@ -191,7 +191,7 @@
     canvas.addEventListener("touchend", function (event) {
       if (touchLock) return;
       touchLock = true;
-      setTimeout(() => { touchLock = false; }, 250); // 0.25秒內不再接受新觸控
+      setTimeout(() => { touchLock = false; }, 500); // 0.25秒內不再接受新觸控
 
       if (event.changedTouches.length > 0) {
         const rect = canvas.getBoundingClientRect();

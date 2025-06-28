@@ -27,14 +27,28 @@
     const scoreDisplay = document.getElementById("totalScore");
     const roundsDiv = document.getElementById("rounds");
 
-    // 標準飛鏢靶分區
-    const sectorScores = [6,10,15,2,17,3,19,7,16,8,11,14,9,12,5,20,1,18,4,13];
-    const sectorColors = ["#fff", "#ADADAD"];
-    const doubleColors = ["#FF2D2D", "#79FF79"];
-    const tripleColors = ["#79FF79", "#FF2D2D"];
-    //const singleColors = ["#fff", "#000"];
-    const bullColor = "#FF5151";
-    const outerBullColor = "#66B3FF";
+    // 標靶設定統一管理
+    const dartboardConfig = {
+      canvasSize: 300,
+      center: { x: 150, y: 150 },
+      radius: 150,
+      bullRadius: 18,
+      outerBullRadius: 36,
+      tripleRingOuter: 105,
+      tripleRingInner: 87,
+      doubleRingOuter: 150,
+      doubleRingInner: 132,
+      singleInner: 37,
+      singleOuter: 86,
+      singleInner2: 106,
+      singleOuter2: 131,
+      sectorScores: [6,10,15,2,17,3,19,7,16,8,11,14,9,12,5,20,1,18,4,13],
+      sectorColors: ["#fff", "#ADADAD"],
+      doubleColors: ["#FF2D2D", "#79FF79"],
+      tripleColors: ["#79FF79", "#FF2D2D"],
+      bullColor: "#FF5151",
+      outerBullColor: "#66B3FF"
+    };
 
     let rounds = [];
     let hitMap = {}; // 統計每格命中次數
@@ -69,8 +83,8 @@
 
     function drawBoard() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      const center = { x: canvas.width / 2, y: canvas.height / 2 };
-      const r = 150;
+      const center = dartboardConfig.center;
+      const r = dartboardConfig.radius;
       // 1. 畫 20 個分區
       for (let i = 0; i < 20; i++) {
         let startAngle = (Math.PI * 2) * (i / 20)- Math.PI / 20;
@@ -80,37 +94,35 @@
         ctx.moveTo(center.x, center.y);
         ctx.arc(center.x, center.y, r - 12, startAngle, endAngle, false);
         ctx.closePath();
-        ctx.fillStyle = sectorColors[i % 2];
+        ctx.fillStyle = dartboardConfig.sectorColors[i % 2];
         ctx.fill();
 
         // Double ring
         ctx.beginPath();
-        ctx.arc(center.x, center.y, r, startAngle, endAngle, false);
-        ctx.arc(center.x, center.y, r - 12, endAngle, startAngle, true);
+        ctx.arc(center.x, center.y, dartboardConfig.doubleRingOuter, startAngle, endAngle, false);
+        ctx.arc(center.x, center.y, dartboardConfig.doubleRingInner, endAngle, startAngle, true);
         ctx.closePath();
-        ctx.fillStyle = doubleColors[i % 2];
+        ctx.fillStyle = dartboardConfig.doubleColors[i % 2];
         ctx.fill();
 
         // Triple ring
         ctx.beginPath();
-        ctx.arc(center.x, center.y, r - 39, startAngle, endAngle, false);
-        ctx.arc(center.x, center.y, r - 51, endAngle, startAngle, true);
+        ctx.arc(center.x, center.y, dartboardConfig.tripleRingOuter, startAngle, endAngle, false);
+        ctx.arc(center.x, center.y, dartboardConfig.tripleRingInner, endAngle, startAngle, true);
         ctx.closePath();
-        ctx.fillStyle = tripleColors[i % 2];
+        ctx.fillStyle = dartboardConfig.tripleColors[i % 2];
         ctx.fill();
       }
       // 2. 畫 bullseye
       ctx.beginPath();
-      ctx.arc(center.x, center.y, 24, 0, Math.PI * 2);
-      ctx.fillStyle = outerBullColor;
+      ctx.arc(center.x, center.y, dartboardConfig.outerBullRadius, 0, Math.PI * 2);
+      ctx.fillStyle = dartboardConfig.outerBullColor;
       ctx.fill();
 
       ctx.beginPath();
-      ctx.arc(center.x, center.y, 12, 0, Math.PI * 2);
-      ctx.fillStyle = bullColor;
+      ctx.arc(center.x, center.y, dartboardConfig.bullRadius, 0, Math.PI * 2);
+      ctx.fillStyle = dartboardConfig.bullColor;
       ctx.fill();
-
-      
 
       // 3. 畫分數文字
       ctx.save();
@@ -123,30 +135,26 @@
         let tx = Math.cos(angle) * (r - 25);
         let ty = Math.sin(angle) * (r - 25);
         ctx.fillStyle = "#222";
-        ctx.fillText(sectorScores[i], tx, ty);
+        ctx.fillText(dartboardConfig.sectorScores[i], tx, ty);
       }
       ctx.restore();
     }
 
     function getScoreFromPos(x, y) {
-      const center = { x: canvas.width / 2, y: canvas.height / 2 };
+      const center = dartboardConfig.center;
       const dx = x - center.x;
       const dy = y - center.y;
-      
       const dist = Math.sqrt(dx * dx + dy * dy);
-
-      // 角度（0為正右方，順時針）
       let angle = Math.atan2(dy, dx);
       if (angle<0) angle += Math.PI*2;
       let sector = Math.round(angle/ (Math.PI * 2)* 20)% 20;
-      let baseScore = sectorScores[sector];
-
+      let baseScore = dartboardConfig.sectorScores[sector];
       // 判斷區域
-      if (dist <= 12) return {score: 50, label: "Bullseye"};
-      else if (dist>=13&&dist <= 24) return {score: 25, label: "Outer Bull"};
-      else if (dist >= 138 && dist <= 150) return {score: baseScore * 2, label: `D${baseScore}`};
-      else if (dist >= 99 && dist <= 111) return {score: baseScore * 3, label: `T${baseScore}`};
-      else if ((dist>=25&&dist <= 98)||(dist>=112&&dist<=137)) return {score: baseScore, label: `${baseScore}`};
+      if (dist <= dartboardConfig.bullRadius) return {score: 50, label: "Bullseye"};
+      else if (dist > dartboardConfig.bullRadius && dist <= dartboardConfig.outerBullRadius) return {score: 25, label: "Outer Bull"};
+      else if (dist >= dartboardConfig.doubleRingInner && dist <= dartboardConfig.doubleRingOuter) return {score: baseScore * 2, label: `D${baseScore}`};
+      else if (dist >= dartboardConfig.tripleRingInner && dist <= dartboardConfig.tripleRingOuter) return {score: baseScore * 3, label: `T${baseScore}`};
+      else if ((dist >= dartboardConfig.singleInner && dist <= dartboardConfig.singleOuter) || (dist >= dartboardConfig.singleInner2 && dist <= dartboardConfig.singleOuter2)) return {score: baseScore, label: `${baseScore}`};
       return {score: 0, label: "Miss"};
     }
 
